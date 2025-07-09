@@ -100,7 +100,7 @@ const AdminMonthlyDues = ({memberId}: Props) => {
                   onClick={() => handlePaymentClick(year, month.id)}
                   className={`p-4 rounded-lg flex items-center justify-between ${isPaid ? 'bg-green-100' : 'bg-gray-100 dark:bg-gray-700'}`}
                 >
-                  <span>{month.name}</span>
+                  <span className=" dark:text-green-500">{month.name}</span>
                   {isPaid && <Check className="w-5 h-5 text-green-600" />}
                 </button>
               );
