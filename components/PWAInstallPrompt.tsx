@@ -9,12 +9,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"; // Ensure `sonner` is installed and configured
+import { toast } from "sonner";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
+
+interface SafariNavigator extends Navigator {
+  standalone?: boolean;
+}
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
@@ -22,11 +26,21 @@ export default function PWAInstallPrompt() {
   const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
-    // Don't show if app is already installed (standalone mode)
-    const isStandalone = window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches;
-    if (isStandalone) return;
+    // Check if app is already installed
+    const checkInstallation = () => {
+      // Check standalone mode
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as SafariNavigator).standalone ||
+        document.referrer.includes('android-app://') ||
+        localStorage.getItem('pwaInstalled') === 'true';
+
+      return isStandalone;
+    };
+
+    if (checkInstallation()) {
+      setShowDialog(false);
+      return;
+    }
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -48,8 +62,9 @@ export default function PWAInstallPrompt() {
     // Listen for install prompt
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Optional: handle if user installs via browser UI
+    // Handle successful installation
     window.addEventListener("appinstalled", () => {
+      localStorage.setItem('pwaInstalled', 'true');
       toast.success("App successfully installed!");
       setShowDialog(false);
       setDeferredPrompt(null);
@@ -67,6 +82,7 @@ export default function PWAInstallPrompt() {
 
     deferredPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === "accepted") {
+        localStorage.setItem('pwaInstalled', 'true');
         toast.success("Installation started");
       } else {
         toast.info("Installation dismissed");
