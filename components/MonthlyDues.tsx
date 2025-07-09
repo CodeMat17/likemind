@@ -118,10 +118,10 @@ const MonthlyDues = () => {
           <Select
             value={selectedYear.toString()}
             onValueChange={handleYearChange}>
-            <SelectTrigger>
+            <SelectTrigger className="border border-gray-400 dark:border-gray-600" >
               <SelectValue placeholder='Select year' />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent >
               {years.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
