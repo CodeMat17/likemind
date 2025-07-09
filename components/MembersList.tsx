@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import AdminMonthlyDues from "./admin/AdminMonthlyDues";
 import AdminFines from "./admin/AdminFines";
 import AdminProjectLevy from "./admin/AdminProjectLevy";
+import AddMemberForm from "./AddMemberForm";
 
 const MembersList = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,7 +24,11 @@ const MembersList = () => {
   return (
     <div className="">
       <div className='flex flex-col items-center mb-6 gap-4'>
-        <h2 className='text-2xl font-semibold'>Members List</h2>
+        <div className="w-full flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+  <h2 className='text-2xl sm:text-3xl font-semibold'>Members List</h2>
+<AddMemberForm />
+        </div>
+      
         <Input
           placeholder='Search members...'
           value={searchTerm}
