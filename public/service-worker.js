@@ -7,18 +7,26 @@ const BLOCKED_PATHS = ["/cdn-cgi/", "/verify", "/challenge"];
 // Install: cache core assets
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) =>
-        cache.addAll([
-          "/",
-          OFFLINE_URL,
-          "/favicon.ico",
-          "/icons/icon-192x192.png",
-          "/icons/icon-512x512.png",
-          "/manifest.json",
-        ])
-      )
+    Promise.all([
+      caches
+        .open(CACHE_NAME)
+        .then((cache) =>
+          cache.addAll([
+            "/",
+            OFFLINE_URL,
+            "/favicon.ico",
+            "/icons/icon-192x192.png",
+            "/icons/icon-512x512.png",
+            "/manifest.json",
+          ])
+        ),
+      // Notify clients about installation
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({ type: 'INSTALLED' });
+        });
+      })
+    ])
   );
   self.skipWaiting();
 });

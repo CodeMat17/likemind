@@ -29,7 +29,8 @@ export default function PWAInstallPrompt() {
     // Check if app is already installed
     const checkInstallation = () => {
       // Check if PWA is already installed via localStorage
-      if (localStorage.getItem('pwaInstalled') === 'true') {
+      const installState = localStorage.getItem('pwaInstalled');
+      if (installState === 'true' || installState === null) {
         return true;
       }
 
@@ -49,18 +50,34 @@ export default function PWAInstallPrompt() {
       return false;
     };
 
+    // Handle service worker messages
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'INSTALLED') {
+        localStorage.setItem('pwaInstalled', 'true');
+        setShowDialog(false);
+        setDeferredPrompt(null);
+      }
+    };
+
     // Check installation status immediately and on visibility change
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && checkInstallation()) {
-        setShowDialog(false);
+      if (document.visibilityState === 'visible') {
+        const isInstalled = checkInstallation();
+        setShowDialog(!isInstalled && !deferredPrompt);
+        if (isInstalled) {
+          setDeferredPrompt(null);
+        }
       }
     };
 
     if (checkInstallation()) {
       setShowDialog(false);
+      setDeferredPrompt(null);
       return;
     }
 
+    // Add event listeners
+    navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const handler = (e: Event) => {
@@ -94,11 +111,14 @@ export default function PWAInstallPrompt() {
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('appinstalled', () => {
+      navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage);
+      
+      const handleAppInstalled = () => {
         localStorage.setItem('pwaInstalled', 'true');
         setShowDialog(false);
         setDeferredPrompt(null);
-      });
+      };
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
