@@ -28,19 +28,40 @@ export default function PWAInstallPrompt() {
   useEffect(() => {
     // Check if app is already installed
     const checkInstallation = () => {
+      // Check if PWA is already installed via localStorage
+      if (localStorage.getItem('pwaInstalled') === 'true') {
+        return true;
+      }
+
       // Check standalone mode
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+      const isStandalone = 
+        window.matchMedia("(display-mode: standalone)").matches ||
         (window.navigator as SafariNavigator).standalone ||
         document.referrer.includes('android-app://') ||
-        localStorage.getItem('pwaInstalled') === 'true';
+        window.navigator.userAgent.includes('wv'); // Check for Android WebView
 
-      return isStandalone;
+      // If detected as standalone, mark as installed
+      if (isStandalone) {
+        localStorage.setItem('pwaInstalled', 'true');
+        return true;
+      }
+
+      return false;
+    };
+
+    // Check installation status immediately and on visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && checkInstallation()) {
+        setShowDialog(false);
+      }
     };
 
     if (checkInstallation()) {
       setShowDialog(false);
       return;
     }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -72,6 +93,12 @@ export default function PWAInstallPrompt() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('appinstalled', () => {
+        localStorage.setItem('pwaInstalled', 'true');
+        setShowDialog(false);
+        setDeferredPrompt(null);
+      });
     };
   }, []);
 
