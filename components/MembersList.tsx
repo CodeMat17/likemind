@@ -24,7 +24,7 @@ const MembersList = () => {
   return (
     <div className="">
       <div className='flex flex-col items-center mb-6 gap-4'>
-        <div className="w-full flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <div className="w-full flex flex-col sm:flex-row gap-2 items-center sm:justify-between">
   <h2 className='text-2xl sm:text-3xl font-semibold'>Members List</h2>
 <AddMemberForm />
         </div>
