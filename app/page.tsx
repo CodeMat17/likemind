@@ -1,101 +1,247 @@
+"use client";
+
+import MonthlyDues from "@/components/MonthlyDues";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/convex/_generated/api";
+import { useMutation } from "convex/react";
+import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { FormEvent, KeyboardEvent, useRef, useState } from "react";
+
+interface VerificationResult {
+  success: boolean;
+  accessCode: string;
+  name: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+  const verifyMember = useMutation(api.members.verifyMember);
+
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [verificationResult, setVerificationResult] =
+    useState<VerificationResult | null>(null);
+  const [showAccessCode, setShowAccessCode] = useState<boolean>(false);
+
+  const toggleVisibility = () => {
+    setShowAccessCode(!showAccessCode);
+  };
+
+  const inputRefs = useRef<Array<HTMLInputElement | null>>(Array(6).fill(null));
+
+  const handleChange = (index: number, value: string) => {
+    // Allow alphanumeric characters
+    if (!/^[a-zA-Z0-9]?$/.test(value)) return;
+
+    const newDigits = [...digits];
+    newDigits[index] = value.toUpperCase(); // Convert to uppercase
+    setDigits(newDigits);
+
+    // Auto-focus next input
+    if (value && index < 5 && inputRefs.current[index + 1]) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      // Move focus to previous input on backspace
+      inputRefs.current[index - 1]?.focus();
+    }
+
+    // Allow navigation with arrow keys
+    if (e.key === "ArrowLeft" && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    if (e.key === "ArrowRight" && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    let pasteData = e.clipboardData.getData("text/plain");
+    // Remove non-alphanumeric characters and limit to 6 characters
+    pasteData = pasteData
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .slice(0, 6)
+      .toUpperCase();
+
+    const newDigits = [...digits];
+    for (let i = 0; i < 6; i++) {
+      newDigits[i] = pasteData[i] || "";
+    }
+
+    setDigits(newDigits);
+
+    // Focus last input if pasted data is complete
+    if (pasteData.length === 6 && inputRefs.current[5]) {
+      inputRefs.current[5]?.focus();
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+
+    const accessCode = digits.join("").toUpperCase();
+    if (accessCode.length !== 6) {
+      setError("Please enter a complete 6-character code");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await verifyMember({ accessCode });
+      setVerificationResult(result as VerificationResult);
+    } catch (error) {
+      setError("Verification failed. Please try again.");
+      console.log("Error Msg: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <main className='min-h-screen px-4 py-4 pb-12 md:px-8 bg-background text-foreground'>
+  
+      {verificationResult?.name ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='max-w-7xl mx-auto'>
+          <div className='relative mb-8 '>
+            <h1 className='text-3xl text-center font-bold uppercase'>
+              FInance Portal
+            </h1>
+          </div>
+
+          <Tabs defaultValue='monthly' className='w-full'>
+            <TabsList className='grid w-full grid-cols-2 md:grid-cols-4 gap-2 p-2 mb-8'>
+              <TabsTrigger
+                value='monthly'
+                className='border border-gray-300 dark:border-gray-600'>
+                Monthly Dues
+              </TabsTrigger>
+              <TabsTrigger
+                value='project'
+                className='border border-gray-300 dark:border-gray-600'>
+                Project Levy
+              </TabsTrigger>
+              <TabsTrigger
+                value='benefits'
+                className='border  border-gray-300 dark:border-gray-600'>
+                Benefits
+              </TabsTrigger>
+              <TabsTrigger
+                value='fines'
+                className='border  border-gray-300 dark:border-gray-600'>
+                Fines
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value='monthly'>
+              <MonthlyDues />
+            </TabsContent>
+            <TabsContent value='project'>
+              {/* <ProjectLevy memberId={member._id} /> */}
+              Project Levy
+            </TabsContent>
+            <TabsContent value='benefits'>
+              {/* <Benefits memberId={member._id} />
+               */}
+              Benefit
+            </TabsContent>
+            <TabsContent value='fines'>
+              {/* <Fines memberId={member._id} /> */}
+              Fines
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      ) : (
+        <div className='mt-20 max-w-sm mx-auto'>
+          <div className='flex justify-center items-center'>
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              alt='logo'
+              priority
+              src='/logo.png'
+              width={80}
+              height={80}
+              className='rounded-lg object-cover mb-4 md:mb-6'
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+          <h1 className='text-center text-xl md:text-2xl font-medium'>
+            Enter your verification code
+          </h1>
+
+          <form onSubmit={handleSubmit} onPaste={handlePaste} className='mt-6'>
+            <div className='relative'>
+              <div className='otp-container'>
+                {digits.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
+                    type={showAccessCode ? "text" : "password"}
+                    inputMode='text'
+                    pattern='[A-Z0-9]*'
+                    maxLength={1}
+                    value={digit}
+                    autoFocus={index === 0}
+                    autoComplete='one-time-code'
+                    disabled={isLoading}
+                    className='otp-input'
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    aria-label={`Character ${index + 1} of 6`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className='flex justify-center mt-2 mb-1'>
+              <button
+                type='button'
+                className='text-xs text-gray-500 hover:text-gray-700 flex items-center'
+                onClick={toggleVisibility}>
+                {showAccessCode ? (
+                  <EyeOff className='w-3 h-3 mr-1' />
+                ) : (
+                  <Eye className='w-3 h-3 mr-1' />
+                )}
+                {showAccessCode ? "Hide code" : "Show code"}
+              </button>
+            </div>
+
+            {error && (
+              <div className='error-message text-center text-red-500 text-sm md:text-base mb-1'>
+                {error}
+              </div>
+            )}
+
+            <Button
+              type='submit'
+              size='lg'
+              className='w-full mt-4 md:mt-6 py-3'
+              disabled={isLoading || digits.join("").length !== 6}>
+              {isLoading ? (
+                <div className='flex items-center justify-center'>
+                  <span className='animate-spin mr-2 w-4 h-4 border-t-2 border-r-2 border-white rounded-full'></span>
+                  Verifying...
+                </div>
+              ) : (
+                "Verify Membership"
+              )}
+            </Button>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      )}
+    </main>
   );
 }
