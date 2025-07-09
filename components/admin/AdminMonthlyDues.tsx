@@ -21,18 +21,18 @@ type Props = {
 
 const years = [2024, 2025, 2026, 2027];
 const months = [
-  { id: 1, name: "January" },
-  { id: 2, name: "February" },
-  { id: 3, name: "March" },
-  { id: 4, name: "April" },
+  { id: 1, name: "Jan" },
+  { id: 2, name: "Feb" },
+  { id: 3, name: "Mar" },
+  { id: 4, name: "Apr" },
   { id: 5, name: "May" },
-  { id: 6, name: "June" },
-  { id: 7, name: "July" },
-  { id: 8, name: "August" },
-  { id: 9, name: "September" },
-  { id: 10, name: "October" },
-  { id: 11, name: "November" },
-  { id: 12, name: "December" },
+  { id: 6, name: "Jun" },
+  { id: 7, name: "Jul" },
+  { id: 8, name: "Aug" },
+  { id: 9, name: "Sept" },
+  { id: 10, name: "Oct" },
+  { id: 11, name: "Nov" },
+  { id: 12, name: "Dec" },
 ];
 
 const AdminMonthlyDues = ({memberId}: Props) => {
@@ -87,7 +87,7 @@ const AdminMonthlyDues = ({memberId}: Props) => {
       {years.map((year) => (
         <div key={year} className="space-y-4">
           <h3 className="text-lg font-semibold">Year {year}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {months.map((month) => {
               const payment = monthlyDues?.find(
                 (due) => due.year === year && due.month === month.id
@@ -98,7 +98,7 @@ const AdminMonthlyDues = ({memberId}: Props) => {
                 <button
                   key={`${year}-${month.id}`}
                   onClick={() => handlePaymentClick(year, month.id)}
-                  className={`p-4 rounded-lg flex items-center justify-between ${isPaid ? 'bg-green-100' : 'bg-gray-100'}`}
+                  className={`p-4 rounded-lg flex items-center justify-between ${isPaid ? 'bg-green-100' : 'bg-gray-100 dark:bg-gray-700'}`}
                 >
                   <span>{month.name}</span>
                   {isPaid && <Check className="w-5 h-5 text-green-600" />}

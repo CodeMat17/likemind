@@ -21,14 +21,14 @@ const MembersList = () => {
     ) || [];
 
   return (
-    <div>
+    <div className="">
       <div className='flex flex-col items-center mb-6 gap-4'>
         <h2 className='text-2xl font-semibold'>Members List</h2>
         <Input
           placeholder='Search members...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className='max-w-xs'
+          className='max-w-sm py-5 shadow-md dark:bg-gray-800'
         />
       </div>
       <div className='mt-6'>

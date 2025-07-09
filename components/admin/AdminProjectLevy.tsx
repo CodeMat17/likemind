@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2 } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -159,11 +159,11 @@ const AdminProjectLevy = ({ memberId }: Props) => {
   return (
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
-        <h2 className='text-xl font-bold'>Project Levy Payments (2025-2027)</h2>
+        <h2 className='text-xl font-bold'>Project Levy</h2>
         <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className='mr-2 h-4 w-4' /> Add Payment
+            Add Levy
             </Button>
           </DialogTrigger>
           <DialogContent>

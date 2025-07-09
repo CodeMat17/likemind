@@ -106,8 +106,8 @@ const AdminVerification = () => {
   // Success state
   if (verificationResult) {
     return (
-      <div className='verification-success px-4 py-12'>
-        <MembersList />
+      <div className='container px-4 py-12 max-w-4xl mx-auto'>
+        <MembersList /> 
       </div>
     );
   }
