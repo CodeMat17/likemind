@@ -109,7 +109,6 @@ export default function Home() {
 
   return (
     <main className='min-h-screen px-4 py-4 pb-12 md:px-8 bg-background text-foreground'>
-  
       {verificationResult?.name ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -164,7 +163,7 @@ export default function Home() {
           </Tabs>
         </motion.div>
       ) : (
-        <div className='mt-20 max-w-sm mx-auto'>
+        <div className='mt-20 max-w-sm mx-auto px-'>
           <div className='flex justify-center items-center'>
             <Image
               alt='logo'
@@ -181,7 +180,7 @@ export default function Home() {
 
           <form onSubmit={handleSubmit} onPaste={handlePaste} className='mt-6'>
             <div className='relative'>
-              <div className='otp-container'>
+              <div className='flex justify-center items-center gap-3 sm:gap-3'>
                 {digits.map((digit, index) => (
                   <input
                     key={index}
@@ -189,14 +188,14 @@ export default function Home() {
                       inputRefs.current[index] = el;
                     }}
                     type={showAccessCode ? "text" : "password"}
-                    inputMode='text'
+                    inputMode='numeric'
                     pattern='[A-Z0-9]*'
                     maxLength={1}
                     value={digit}
                     autoFocus={index === 0}
                     autoComplete='one-time-code'
                     disabled={isLoading}
-                    className='otp-input'
+                    className='w-10 h-12 sm:w-10 sm:h-12 p-1 sm:p-4 text-center text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 transition-colors'
                     onChange={(e) => handleChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
                     aria-label={`Character ${index + 1} of 6`}

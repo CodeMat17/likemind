@@ -11,6 +11,20 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Check, X } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+interface Member {
+  _id: string;
+  name: string;
+}
+
+interface MonthlyDue {
+  _id: string;
+  memberId: string;
+  month: number;
+  year: number;
+  status: string;
+}
 
 const months = [
   { id: 1, name: "January" },
@@ -27,79 +41,58 @@ const months = [
   { id: 12, name: "December" },
 ];
 
-// interface Member {
-//   _id: string;
-//   name: string;
-// }
-
-interface MonthlyDue {
-  _id: string;
-  memberId: string;
-  month: number;
-  year: number;
-  status: string;
-}
-
 const MonthlyDues = () => {
   const [selectedYear, setSelectedYear] = useState(2025);
 
-  // Fetch all required data
   const rawMembersData = useQuery(api.members.getAllMembers);
   const rawMonthlyDuesData = useQuery(api.monthlyDues.getAllMonthlyDues);
 
-  // Memoize processed data to avoid dependency issues
-  const membersData = useMemo(() => rawMembersData || [], [rawMembersData]);
-  const monthlyDuesData = useMemo(
+  const membersData = useMemo<Member[]>(
+    () => rawMembersData || [],
+    [rawMembersData]
+  );
+  const monthlyDuesData = useMemo<MonthlyDue[]>(
     () => rawMonthlyDuesData || [],
     [rawMonthlyDuesData]
   );
 
-  // Get unique years from dues
-  const years = useMemo(() => {
-    return [2024, 2025, 2026, 2027];
-  }, []);
+  const years = useMemo(() => [2024, 2025, 2026, 2027], []);
 
-  // Group dues by member and month
   const duesByMemberMonth = useMemo(() => {
     const map = new Map<string, Map<number, MonthlyDue>>();
-
     monthlyDuesData.forEach((due) => {
-      if (!map.has(due.memberId)) {
-        map.set(due.memberId, new Map());
-      }
-      const memberMap = map.get(due.memberId)!;
-      memberMap.set(due.month, due);
+      if (!map.has(due.memberId)) map.set(due.memberId, new Map());
+      map.get(due.memberId)!.set(due.month, due);
     });
-
     return map;
   }, [monthlyDuesData]);
 
-  // Create a combined list of members with their dues
   const membersWithDues = useMemo(() => {
-    return membersData.map((member) => {
-      const dues =
-        duesByMemberMonth.get(member._id) || new Map<number, MonthlyDue>();
-      return { ...member, dues };
-    });
+    return membersData
+      .map((member) => {
+        const dues =
+          duesByMemberMonth.get(member._id) || new Map<number, MonthlyDue>();
+        return { ...member, dues };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [membersData, duesByMemberMonth]);
 
-  // Calculate total paid records and amount for selected year
   const totalPaidRecords = useMemo(() => {
-    return monthlyDuesData.filter(due => 
-      due.status.toLowerCase() === "paid" && due.year === selectedYear
+    return monthlyDuesData.filter(
+      (due) => due.status.toLowerCase() === "paid" && due.year === selectedYear
     ).length;
   }, [monthlyDuesData, selectedYear]);
 
-  const totalAmount = useMemo(() => {
-    return totalPaidRecords * 5000;
-  }, [totalPaidRecords]);
+  const totalAmount = useMemo(
+    () => totalPaidRecords * 5000,
+    [totalPaidRecords]
+  );
 
-  // Check if data is loading
-  const isLoading = useMemo(() => {
-    return rawMembersData === undefined || rawMonthlyDuesData === undefined;
-  }, [rawMembersData, rawMonthlyDuesData]);
+  const isLoading = useMemo(
+    () => rawMembersData === undefined || rawMonthlyDuesData === undefined,
+    [rawMembersData, rawMonthlyDuesData]
+  );
 
-  // Handle year change
   const handleYearChange = useCallback((value: string) => {
     setSelectedYear(Number(value));
   }, []);
@@ -118,10 +111,10 @@ const MonthlyDues = () => {
           <Select
             value={selectedYear.toString()}
             onValueChange={handleYearChange}>
-            <SelectTrigger className="border border-gray-400 dark:border-gray-600" >
+            <SelectTrigger className='border border-gray-400 dark:border-gray-600'>
               <SelectValue placeholder='Select year' />
             </SelectTrigger>
-            <SelectContent >
+            <SelectContent>
               {years.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
@@ -142,60 +135,45 @@ const MonthlyDues = () => {
         </ul>
       </div>
 
-      <div className='overflow-x-auto border rounded-lg'>
-        <table className='min-w-full divide-y divide-gray-200'>
-          <thead className='bg-gray-50'>
-            <tr>
-              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                Member
-              </th>
-              {months.map((month) => (
-                <th
-                  key={month.id}
-                  className='px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                  {month.name.substring(0, 3)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className='bg-white divide-y divide-gray-200'>
-            {membersWithDues.map((member) => (
-              <tr key={member._id}>
-                <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
-                  {member.name}
-                </td>
-                {months.map((month) => {
-                  const due = member.dues.get(month.id);
-                  const isCurrentYear = due?.year === selectedYear;
-                  const isPaid = due?.status.toLowerCase() === "paid";
-
-                  return (
-                    <td
-                      key={month.id}
-                      className={`px-3 py-4 whitespace-nowrap text-center ${
-                        isCurrentYear && isPaid ? "bg-green-50" : "bg-gray-50"
-                      }`}>
-                      {isCurrentYear ? (
-                        <div
-                          className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
-                            isPaid ? "text-green-600" : "text-gray-400"
-                          }`}>
-                          {isPaid ? (
-                            <Check className='w-5 h-5' />
-                          ) : (
-                            <X className='w-5 h-5' />
-                          )}
-                        </div>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+        {membersWithDues.map((member) => (
+          <Card key={member._id} className='shadow-md'>
+            <CardHeader>
+              <CardTitle className='text-lg font-semibold'>
+                {member.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='grid grid-cols-4 gap-2 text-sm'>
+              {months.map((month) => {
+                const due = member.dues.get(month.id);
+                const isCurrentYear = due?.year === selectedYear;
+                const isPaid = due?.status.toLowerCase() === "paid";
+                return (
+                  <div
+                    key={month.id}
+                    className={`flex flex-col items-center justify-center p-2 rounded-md text-xs font-medium border ${
+                      isCurrentYear && isPaid
+                        ? "bg-green-100 text-green-600 border-green-300"
+                        : isCurrentYear
+                          ? "bg-gray-100 text-gray-600 border-gray-300"
+                          : "bg-gray-50 text-gray-300 border-gray-200"
+                    }`}>
+                    <span>{month.name.substring(0, 3)}</span>
+                    {isCurrentYear ? (
+                      isPaid ? (
+                        <Check className='w-4 h-4' />
                       ) : (
-                        <span className='text-gray-300'>-</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        <X className='w-4 h-4' />
+                      )
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

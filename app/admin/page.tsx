@@ -125,13 +125,13 @@ const AdminVerification = () => {
         />
       </div>
 
-      <h1 className='text-center text-xl md:text-2xl font-medium'>
+      <h1 className='text-center text-xl md:text-2xl font-medium mb-6'>
         Admin Verification
       </h1>
 
       <form onSubmit={handleSubmit} onPaste={handlePaste}>
         <div className='relative'>
-          <div className='otp-container'>
+          <div className='flex justify-center items-center gap-3 sm:gap-3'>
             {digits.map((digit, index) => (
               <input
                 key={index}
@@ -146,7 +146,7 @@ const AdminVerification = () => {
                 autoFocus={index === 0}
                 autoComplete='one-time-code'
                 disabled={isLoading}
-                className='otp-input'
+                className='w-10 h-12 sm:w-10 sm:h-12 p-1 sm:p-4 text-center text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 transition-colors'
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 aria-label={`Character ${index + 1} of 6`}
