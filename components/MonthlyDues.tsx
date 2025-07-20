@@ -137,7 +137,7 @@ const MonthlyDues = () => {
 
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
         {membersWithDues.map((member) => (
-          <Card key={member._id} className='shadow-md'>
+          <Card key={member._id} className='shadow-md dark:bg-gray-800'>
             <CardHeader>
               <CardTitle className='text-lg font-semibold'>
                 {member.name}
@@ -155,8 +155,8 @@ const MonthlyDues = () => {
                       isCurrentYear && isPaid
                         ? "bg-green-100 text-green-600 border-green-300"
                         : isCurrentYear
-                          ? "bg-gray-100 text-gray-600 border-gray-300"
-                          : "bg-gray-50 text-gray-300 border-gray-200"
+                          ? "bg-gray-100 dark:bg-gray-600 text-muted-foreground border-gray-300"
+                          : "bg-gray-400 text-gray-300 border-gray-200"
                     }`}>
                     <span>{month.name.substring(0, 3)}</span>
                     {isCurrentYear ? (
