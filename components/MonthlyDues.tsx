@@ -137,7 +137,7 @@ const MonthlyDues = () => {
 
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
         {membersWithDues.map((member) => (
-          <Card key={member._id} className='shadow-md dark:bg-gray-800'>
+          <Card key={member._id} className='shadow-md bg-white dark:bg-gray-800'>
             <CardHeader>
               <CardTitle className='text-lg font-semibold'>
                 {member.name}
