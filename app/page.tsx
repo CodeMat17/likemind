@@ -188,7 +188,7 @@ export default function Home() {
                       inputRefs.current[index] = el;
                     }}
                     type={showAccessCode ? "text" : "password"}
-                    inputMode='numeric'
+                    inputMode='text'
                     pattern='[A-Z0-9]*'
                     maxLength={1}
                     value={digit}
