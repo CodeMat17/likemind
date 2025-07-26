@@ -11,6 +11,12 @@ export const getByMemberId = query({
   },
 });
 
+export const getAllMonthlyDues = query({
+  handler: async (ctx) => {
+    return await ctx.db.query("monthlyDues").collect();
+  },
+});
+
 export const getByYearMonth = query({
   args: { year: v.number(), month: v.number() },
   handler: async (ctx, args) => {
@@ -64,8 +70,30 @@ export const unMarkDues = mutation({
   },
 });
 
-export const getAllMonthlyDues = query({
+export const getAllMembersWithPaidDues = query({
   handler: async (ctx) => {
-    return await ctx.db.query("monthlyDues").collect();
+    // Fetch all members
+    const members = await ctx.db.query("members").collect();
+
+    // Fetch paid dues for each member for years 2024–2027
+    const membersWithDues = await Promise.all(
+      members.map(async (member) => {
+        const paidDues = await ctx.db
+          .query("monthlyDues")
+          .withIndex("by_member", (q) => q.eq("memberId", member._id))
+          .filter((q) => q.eq(q.field("status"), "paid"))
+          .filter((q) =>
+            q.and(q.gte(q.field("year"), 2024), q.lte(q.field("year"), 2027))
+          )
+          .collect();
+
+        return {
+          ...member,
+          paidDues,
+        };
+      })
+    );
+
+    return membersWithDues;
   },
 });
